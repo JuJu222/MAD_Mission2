@@ -9,18 +9,26 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.view.Gravity;
 import android.view.View;
+import android.widget.TextView;
 
 import com.example.mission2.model.User;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements RecyclerViewAdapter.OnCardListener {
     ArrayList<User> dataUser;
     RecyclerViewAdapter recyclerViewAdapter;
+    TextView mainTextView;
+    ProgressDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +39,7 @@ public class MainActivity extends AppCompatActivity implements RecyclerViewAdapt
         recyclerViewAdapter = new RecyclerViewAdapter(dataUser, MainActivity.this, this);
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
         FloatingActionButton floatingActionButton = findViewById(R.id.floatingActionButton);
+        mainTextView = findViewById(R.id.mainTextView);
 
         RecyclerView.LayoutManager manager = new LinearLayoutManager(getBaseContext());
         recyclerView.setLayoutManager(manager);
@@ -39,8 +48,9 @@ public class MainActivity extends AppCompatActivity implements RecyclerViewAdapt
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                startActivityForResult() depreciated
+//              startActivityForResult() depreciated
                 Intent intent = new Intent(MainActivity.this, AddEditUserActivity.class);
+                intent.putExtra("type", "add");
                 addEditUserActivityLauncher.launch(intent);
             }
         });
@@ -50,7 +60,7 @@ public class MainActivity extends AppCompatActivity implements RecyclerViewAdapt
     public void onCardClick(int position) {
         Intent intent = new Intent(MainActivity.this, UserActivity.class);
         intent.putExtra("position", position);
-        intent.putExtra("user", dataUser.get(position));
+        intent.putExtra("dataUser", dataUser);
         userActivityLauncher.launch(intent);
     }
 
@@ -64,7 +74,13 @@ public class MainActivity extends AppCompatActivity implements RecyclerViewAdapt
                         assert data != null;
                         User user = data.getParcelableExtra("user");
                         dataUser.add(user);
-                        System.out.println(user.getFullName());
+
+                        if (dataUser.isEmpty()) {
+                            mainTextView.setVisibility(View.VISIBLE);
+                        } else {
+                            mainTextView.setVisibility(View.GONE);
+                        }
+
                         recyclerViewAdapter.notifyDataSetChanged();
                     }
                 }
@@ -75,20 +91,20 @@ public class MainActivity extends AppCompatActivity implements RecyclerViewAdapt
             new ActivityResultCallback<ActivityResult>() {
                 @Override
                 public void onActivityResult(ActivityResult result) {
-                    if (result.getResultCode() == 1) {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
                         Intent data = result.getData();
-                        assert data != null;
-                        int index = data.getIntExtra("position", -1);
-                        User user = data.getParcelableExtra("user");
-                        dataUser.get(index).setFullName(user.getFullName());
-                        dataUser.get(index).setAge(user.getAge());
-                        dataUser.get(index).setAddress(user.getAddress());
-                        recyclerViewAdapter.notifyDataSetChanged();
-                    } else if (result.getResultCode() == 2) {
-                        Intent data = result.getData();
-                        assert data != null;
-                        int index = data.getIntExtra("position", -1);
-                        dataUser.remove(index);
+                        ArrayList<User> temp = data.getParcelableArrayListExtra("dataUser");
+//                        dataUser = temp (tidak dapat digunakan karena bug notifyDataSetChanged())
+//                        Bila di print, isi arraylist dataUser sudah berubah tetapi tampilan tidak mau berubah
+                        dataUser.clear();
+                        dataUser.addAll(temp);
+
+                        if (dataUser.isEmpty()) {
+                            mainTextView.setVisibility(View.VISIBLE);
+                        } else {
+                            mainTextView.setVisibility(View.GONE);
+                        }
+
                         recyclerViewAdapter.notifyDataSetChanged();
                     }
                 }

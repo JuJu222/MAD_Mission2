@@ -37,7 +37,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     @Override
     public void onBindViewHolder(@NonNull RecyclerViewAdapter.ViewHolder holder, int position) {
         holder.cardTextViewFullName.setText(userArrayList.get(position).getFullName());
-        holder.cardTextViewAge.setText(userArrayList.get(position).getAge());
+        holder.cardTextViewAge.setText(userArrayList.get(position).getAge() + " years old");
         holder.cardTextViewAddress.setText(userArrayList.get(position).getAddress());
     }
 
